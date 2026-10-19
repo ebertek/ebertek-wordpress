@@ -1,0 +1,16 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:recommended"],
+  "schedule": ["at any time"],
+  "packageRules": [
+    {
+      "description": "Track WordPress releases on the PHP 8.3 FPM Alpine variant",
+      "matchDatasources": ["docker"],
+      "matchPackageNames": ["wordpress"],
+      "versioning": "regex:^(?<major>\\d+)\\.(?<minor>\\d+)\\.(?<patch>\\d+)-php8\\.3-fpm-alpine$",
+      "automerge": true,
+      "automergeType": "pr",
+      "platformAutomerge": true
+    }
+  ]
+}
