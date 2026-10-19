@@ -1,15 +1,15 @@
 # ebertek-wordpress
 
-Minimal WordPress PHP 8.3 FPM Alpine derivative with `pdo_mysql` for YOURLS and other PHP applications.
+Minimal WordPress PHP 8.5 FPM Alpine derivative with `pdo_mysql` for YOURLS and other PHP applications.
 
 ## Release policy
 
-The Dockerfile pins the exact upstream WordPress version and PHP variant. Renovate proposes updates to upstream WordPress releases within PHP 8.3 FPM Alpine and is configured to automerge passing PRs. A successful build on `main` publishes:
+The Dockerfile pins the exact upstream WordPress version and PHP variant. Renovate proposes updates to upstream WordPress releases within PHP 8.5 FPM Alpine and is configured to automerge passing PRs. A successful build on `main` publishes:
 
-- `ghcr.io/ebertek/ebertek-wordpress:<wordpress-version>-php8.3-fpm-alpine` (immutable-by-convention release tag)
-- `ghcr.io/ebertek/ebertek-wordpress:php8.3-fpm-alpine` (rolling tag)
+- `ghcr.io/ebertek/ebertek-wordpress:<wordpress-version>-php8.5-fpm-alpine` (immutable-by-convention release tag)
+- `ghcr.io/ebertek/ebertek-wordpress:php8.5-fpm-alpine` (rolling tag)
 
-A matching GitHub release `v<wordpress-version>` is created only after a successful image push.
+A matching PHP-specific GitHub release `v<wordpress-version>-php8.5` is created only after a successful image push.
 
 The GitHub release reflects the bundled upstream WordPress version; it is not an official WordPress release.
 
