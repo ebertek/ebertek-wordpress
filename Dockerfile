@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1
-FROM wordpress:7.1.3-php8.3-fpm-alpine
+FROM wordpress:7.1.3-php8.5-fpm-alpine
 
 SHELL ["/bin/ash", "-eo", "pipefail", "-c"]
 
