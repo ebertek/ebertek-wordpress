@@ -1,0 +1,97 @@
+name: Build and release WordPress
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - Dockerfile
+      - .github/workflows/publish.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  packages: write
+
+concurrency:
+  group: wordpress-publish
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Resolve WordPress version
+        id: version
+        shell: bash
+        run: |
+          set -euo pipefail
+          tag="$(sed -nE 's/^FROM wordpress:([0-9]+\.[0-9]+\.[0-9]+-php8\.3-fpm-alpine)$/\1/p' Dockerfile)"
+          if [[ -z "$tag" ]]; then
+            echo 'Unexpected Dockerfile FROM tag' >&2
+            exit 1
+          fi
+          version="${tag%%-php8.3-fpm-alpine}"
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "image=ghcr.io/${GITHUB_REPOSITORY,,}" >> "$GITHUB_OUTPUT"
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build local test image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          load: true
+          push: false
+          tags: wordpress-smoke:local
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Smoke test
+        shell: bash
+        run: |
+          set -euo pipefail
+          docker run --rm --entrypoint php wordpress-smoke:local -r \
+            'foreach (["mysqli", "intl", "pdo_mysql", "imagick", "gd", "zip"] as $ext) { if (!extension_loaded($ext)) { fwrite(STDERR, "$ext missing\n"); exit(1); } }'
+          docker run --rm --entrypoint php-fpm wordpress-smoke:local -t
+          test "$(docker image inspect wordpress-smoke:local --format '{{.Config.User}}')" = 'www-data'
+
+      - name: Publish images
+        shell: bash
+        env:
+          IMAGE: ${{ steps.version.outputs.image }}
+          VERSION_TAG: ${{ steps.version.outputs.tag }}
+        run: |
+          set -euo pipefail
+          docker tag wordpress-smoke:local "$IMAGE:$VERSION_TAG"
+          docker tag wordpress-smoke:local "$IMAGE:php8.3-fpm-alpine"
+          docker push "$IMAGE:$VERSION_TAG"
+          docker push "$IMAGE:php8.3-fpm-alpine"
+
+      - name: Create GitHub release if absent
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERSION: ${{ steps.version.outputs.version }}
+          IMAGE: ${{ steps.version.outputs.image }}
+          VERSION_TAG: ${{ steps.version.outputs.tag }}
+        run: |
+          set -euo pipefail
+          if ! gh release view "v$VERSION" >/dev/null 2>&1; then
+            gh release create "v$VERSION" \
+              --target "$GITHUB_SHA" \
+              --title "WordPress $VERSION" \
+              --notes "Based on wordpress:$VERSION_TAG. Image: $IMAGE:$VERSION_TAG" \
+              --latest
+          fi
