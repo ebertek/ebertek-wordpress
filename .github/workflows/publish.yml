@@ -28,7 +28,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          tag="$(sed -nE 's/^FROM wordpress:([0-9]+\.[0-9]+\.[0-9]+-php8\.3-fpm-alpine)$/\1/p' Dockerfile)"
+          tag="$(sed -nE 's/^FROM wordpress:([0-9]+\.[0-9]+\.[0-9]+-php8\.5-fpm-alpine)$/\1/p' Dockerfile)"
           if [[ -z "$tag" ]]; then
             echo 'Unexpected Dockerfile FROM tag' >&2
             exit 1
