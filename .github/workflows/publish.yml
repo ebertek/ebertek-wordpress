@@ -33,7 +33,7 @@ jobs:
             echo 'Unexpected Dockerfile FROM tag' >&2
             exit 1
           fi
-          version="${tag%%-php8.3-fpm-alpine}"
+          version="${tag%%-php8.5-fpm-alpine}"
           echo "tag=$tag" >> "$GITHUB_OUTPUT"
           echo "version=$version" >> "$GITHUB_OUTPUT"
           echo "image=ghcr.io/${GITHUB_REPOSITORY,,}" >> "$GITHUB_OUTPUT"
@@ -63,6 +63,8 @@ jobs:
         run: |
           set -euo pipefail
           docker run --rm --entrypoint php wordpress-smoke:local -r \
+            'if (PHP_MAJOR_VERSION !== 8 || PHP_MINOR_VERSION !== 5) { exit(1); }'
+          docker run --rm --entrypoint php wordpress-smoke:local -r \
             'foreach (["mysqli", "intl", "pdo_mysql", "imagick", "gd", "zip"] as $ext) { if (!extension_loaded($ext)) { fwrite(STDERR, "$ext missing\n"); exit(1); } }'
           docker run --rm --entrypoint php-fpm wordpress-smoke:local -t
           test "$(docker image inspect wordpress-smoke:local --format '{{.Config.User}}')" = 'www-data'
@@ -75,9 +77,9 @@ jobs:
         run: |
           set -euo pipefail
           docker tag wordpress-smoke:local "$IMAGE:$VERSION_TAG"
-          docker tag wordpress-smoke:local "$IMAGE:php8.3-fpm-alpine"
+          docker tag wordpress-smoke:local "$IMAGE:php8.5-fpm-alpine"
           docker push "$IMAGE:$VERSION_TAG"
-          docker push "$IMAGE:php8.3-fpm-alpine"
+          docker push "$IMAGE:php8.5-fpm-alpine"
 
       - name: Create GitHub release if absent
         shell: bash
@@ -88,10 +90,10 @@ jobs:
           VERSION_TAG: ${{ steps.version.outputs.tag }}
         run: |
           set -euo pipefail
-          if ! gh release view "v$VERSION" >/dev/null 2>&1; then
-            gh release create "v$VERSION" \
+          if ! gh release view "v$VERSION-php8.5" >/dev/null 2>&1; then
+            gh release create "v$VERSION-php8.5" \
               --target "$GITHUB_SHA" \
-              --title "WordPress $VERSION" \
+              --title "WordPress $VERSION (PHP 8.5)" \
               --notes "Based on wordpress:$VERSION_TAG. Image: $IMAGE:$VERSION_TAG" \
               --latest
           fi
