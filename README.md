@@ -4,12 +4,13 @@ Minimal WordPress PHP 8.5 FPM Alpine derivative with `pdo_mysql` for YOURLS and 
 
 ## Release policy
 
-The Dockerfile pins the exact upstream WordPress version and PHP variant. Renovate proposes updates to upstream WordPress releases within PHP 8.5 FPM Alpine and is configured to automerge passing PRs. A successful build on `main` publishes:
+The Dockerfile pins the exact upstream WordPress version and PHP variant. Renovate proposes both WordPress version updates and digest updates when upstream rebuilds an unchanged tag (for example, for CVE fixes). It pins the upstream Dockerfile FROM reference to a digest, and is configured to automerge eligible non-major and digest updates. A successful build on `main` publishes:
 
-- `ghcr.io/ebertek/ebertek-wordpress:<wordpress-version>-php8.5-fpm-alpine` (immutable-by-convention release tag)
+- `ghcr.io/ebertek/ebertek-wordpress:<wordpress-version>-php8.5-fpm-alpine-<git-sha12>` (immutable-by-convention build tag)
+- `ghcr.io/ebertek/ebertek-wordpress:<wordpress-version>-php8.5-fpm-alpine` (rolling per-WordPress-version tag)
 - `ghcr.io/ebertek/ebertek-wordpress:php8.5-fpm-alpine` (rolling tag)
 
-A matching PHP-specific GitHub release `v<wordpress-version>-php8.5` is created only after a successful image push.
+A distinct GitHub release `v<wordpress-version>-php8.5-<git-sha12>` is created after each successful published build, including security rebuilds where the WordPress version is unchanged.
 
 The GitHub release reflects the bundled upstream WordPress version; it is not an official WordPress release.
 
@@ -27,4 +28,6 @@ The GitHub release reflects the bundled upstream WordPress version; it is not an
 - `php-fpm -t` validates FPM configuration, not actual site/database availability.
 - Mounted `/usr/local/etc/php/conf.d` overrides image-provided extension INI files. Preserve the extension-enabling configurations.
 - This workflow builds `linux/amd64`; changing PHP versions requires a deliberate edit.
-- Renovate PR automerge depends on GitHub repository permissions and rules. Changes to upstream package layers without WordPress version changes do not trigger version releases.
+- Renovate's first run with digest pinning enabled should propose a pinDigest PR, then subsequent upstream digest changes will trigger digest PRs. The Dockerfile's FROM stays on the same human-readable WordPress tag and appends `@sha256:...`.
+- Renovate PR automerge depends on GitHub repository permissions and branch rules. Protect the default branch with required build checks before allowing automatic merges.
+- The workflow creates a distinct build release for every qualifying Dockerfile change. Deploy the commit-suffixed tag (or a downstream pinned digest) when you need immutable deployments.
