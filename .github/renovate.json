@@ -2,14 +2,16 @@
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": [
     "config:recommended",
-    ":automergeStableNonMajor"
+    ":automergeStableNonMajor",
+    "docker:pinDigests",
+    "default:automergeDigest"
   ],
   "schedule": [
     "at any time"
   ],
   "packageRules": [
     {
-      "description": "Track WordPress releases on the PHP 8.5 FPM Alpine variant",
+      "description": "Track WordPress 8.5 Alpine release tags and rebuilt digests",
       "matchDatasources": [
         "docker"
       ],
