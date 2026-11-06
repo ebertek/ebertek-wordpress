@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1@sha256:4edf897a3ffa55b89f906fc8cc78afdb3f1834cc9c7083565e611a8a7d5fe99e
-FROM wordpress:7.1.4-php8.5-fpm-alpine@sha256:eaed76dc52915e289982662c89b61534860216240d296cd9ce49b52af0bcc8a0
+FROM wordpress:7.1.4-php8.5-fpm-alpine@sha256:9b185c8ad199f7505ad836c3cdc2eb279108cc68f39fa6cc3648d3134a19c292
 
 SHELL ["/bin/ash", "-eo", "pipefail", "-c"]
 
